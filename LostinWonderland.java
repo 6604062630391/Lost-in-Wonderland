@@ -99,6 +99,8 @@ public class LostinWonderland extends JPanel implements ActionListener {
         doorImage = new ImageIcon("door.png").getImage();
     }
 
+
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -395,4 +397,4 @@ public class LostinWonderland extends JPanel implements ActionListener {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
-}
+} 
