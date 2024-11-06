@@ -6,13 +6,15 @@ import java.awt.event.ActionListener;
 public class Homegame extends JPanel {
     private JFrame frame;
     private Image backgroundImage;
+    private MusicThread musicThread;
 
     public Homegame(JFrame frame) {
         this.frame = frame;
         setPreferredSize(new Dimension(800, 390));
         setLayout(null); 
 
-       
+        musicThread = new MusicThread();
+        musicThread.playMusic("jungle.wav",true);
         backgroundImage = new ImageIcon("Home.jpg").getImage();
 
        
@@ -43,10 +45,9 @@ public class Homegame extends JPanel {
                 System.exit(0); 
             }
         });
-
-        
         add(startButton);
         add(exitButton);
+        
     }
 
     @Override
@@ -58,6 +59,7 @@ public class Homegame extends JPanel {
     }
 
     private void startGame() {
+        musicThread.stopMusic(); 
         frame.getContentPane().removeAll(); 
         LostinWonderland gamePanel = new LostinWonderland(); 
         frame.add(gamePanel);

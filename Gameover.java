@@ -1,4 +1,3 @@
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -9,20 +8,21 @@ public class Gameover extends JPanel {
     private Image backgroundImage;
     private Image restartButtonImage;
     private Image exitButtonImage;
+    private MusicThread musicThread;
 
     public Gameover(JFrame frame) {
         this.frame = frame;
         setPreferredSize(new Dimension(800, 390));
         setLayout(null);
 
-        // Load background image
         backgroundImage = new ImageIcon("gameover.jpg").getImage(); 
 
-        // Load button images
         restartButtonImage = new ImageIcon("restart01.png").getImage(); 
         exitButtonImage = new ImageIcon("no01.png").getImage(); 
 
-        // Create Restart button
+        musicThread = new MusicThread();
+        musicThread.playMusic("gameover.wav",false);
+
         JButton restartButton = new JButton(new ImageIcon(restartButtonImage));
         restartButton.setBounds(300, 200, 200, 50); 
         restartButton.setContentAreaFilled(false);
@@ -35,7 +35,7 @@ public class Gameover extends JPanel {
             }
         });
 
-       
+
         JButton exitButton = new JButton(new ImageIcon(exitButtonImage));
         exitButton.setBounds(300, 270, 200, 50); 
         exitButton.setContentAreaFilled(false); 
@@ -48,7 +48,6 @@ public class Gameover extends JPanel {
             }
         });
 
-        // Add buttons to panel
         add(restartButton);
         add(exitButton);
     }
@@ -61,6 +60,7 @@ public class Gameover extends JPanel {
     }
 
     private void restartGame() {
+        musicThread.stopMusic(); 
         frame.getContentPane().removeAll(); 
         LostinWonderland gamePanel = new LostinWonderland(); 
         frame.add(gamePanel); 
@@ -69,3 +69,4 @@ public class Gameover extends JPanel {
         gamePanel.requestFocusInWindow(); 
     }
 }
+

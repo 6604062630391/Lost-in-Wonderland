@@ -9,12 +9,19 @@ import java.util.ArrayList;
 public class LostinWonderland extends JPanel implements ActionListener {
 
     private Timer timer;
+
+    private int remainingTime = 30;
+    private boolean isCountdownActive = false;
+    private Thread countdownThread;
+
     private int playerX = 50;
     private int playerY = 210;
     private int velocityY = 0;
     private boolean onGround = true;
     private int hp = 10;  // HP เริ่มต้นที่ 10
     private int currentGhostIndex = -1; 
+
+    private MusicThread musicThread;
 
     private boolean ghostEncounter = false;
     private String ghostMessage = "";
@@ -39,6 +46,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
     private Image heartImage;
     private Image keyImage;
     private Image doorImage;
+    private Image boxImage;
 
     private ArrayList<Point> coins = new ArrayList<>();
     private ArrayList<Boolean> coinCollected = new ArrayList<>();
@@ -55,7 +63,11 @@ public class LostinWonderland extends JPanel implements ActionListener {
     private boolean isFacingRight = true;
     private int cameraX = 0;
 
-    private final String[] words = {"Apple", "Mango", "Absorb", "Defeat", "Equip"};
+    private final String[] words = {"Apple", "Mango", "Absorb", "Defeat", "Equip","Goodbye"};
+
+    private ArrayList<Point> lamp = new ArrayList<>();
+    private Image lampImage;
+
 
     private boolean hasKey = false;
     private Point keyPosition;
@@ -68,6 +80,8 @@ public class LostinWonderland extends JPanel implements ActionListener {
         addKeyListener(new TAdapter());
         timer = new Timer(10, this);
         timer.start();
+        musicThread = new MusicThread();
+        musicThread.playMusic("jungle.wav",true);
 
         for (int i = 0; i < 10; i++) {
             int x = 100 + i * 150; 
@@ -97,9 +111,12 @@ public class LostinWonderland extends JPanel implements ActionListener {
         heartImage = new ImageIcon("heart.png").getImage();
         keyImage = new ImageIcon("key.png").getImage();
         doorImage = new ImageIcon("door.png").getImage();
+        lampImage = new ImageIcon("lamp.png").getImage();
+        boxImage = new ImageIcon("box.png").getImage();
+
     }
 
-
+    
 
     @Override
     public void paintComponent(Graphics g) {
@@ -153,6 +170,10 @@ public class LostinWonderland extends JPanel implements ActionListener {
             }
         }
 
+        for (Point Lamp : lamp) {
+            g.drawImage(lampImage, Lamp.x - cameraX, Lamp.y, 50, 70, this);
+        }
+
 
         if (currentLevel == 2) {
             if (!hasKey) {
@@ -165,16 +186,22 @@ public class LostinWonderland extends JPanel implements ActionListener {
         g.setColor(Color.WHITE);
         g.drawString("HP: " + hp, 50, 360);
 
+        
+        g.setColor(Color.BLACK);
         if (currentLevel == 1) {
-            g.drawString("Coins x " + coinsCollected, getWidth() - 100, 30);
+            g.drawImage(boxImage,680,25,100,40,this );
+            g.drawString("Coins x " + coinsCollected, getWidth() - 110, 50);
         } else if (currentLevel == 2) {
-            g.drawImage(keyImage,getWidth() - 180,14,30,19,this );
-            g.drawString((hasKey ? "Collected !" : "Not Collected"), getWidth() - 140, 30);
+            g.drawImage(boxImage,608,26,180,35,this );
+            g.drawImage(keyImage,getWidth() - 180,35,30,17,this );
+            g.drawString((hasKey ? "Collected !" : "Not Collected"), getWidth() - 140, 50);
+            g.drawImage(boxImage,10,26,160,35,this );
+            g.drawString("Time Left: " + remainingTime, 30, 50);
         }
         if (ghostEncounter) {
-            g.drawImage(rbImage,320,50,164,60,this );
+            g.drawImage(rbImage,320,50,180,60,this );
             g.setColor(Color.BLACK);
-            g.drawString(ghostMessage, 373, 92);
+            g.drawString(ghostMessage, 370, 92);
             g.setColor(Color.WHITE);
             g.drawString("> " + userInput, 320, 360);
         }
@@ -193,7 +220,11 @@ public class LostinWonderland extends JPanel implements ActionListener {
         }
     }
     private void endGame() {
+        musicThread.stopMusic();
         timer.stop();
+        if (countdownThread != null && countdownThread.isAlive()) {
+            countdownThread.interrupt(); // หยุด Thread ของนับถอยหลัง
+        }
         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
         topFrame.getContentPane().removeAll();
         Gameover gameOverPanel = new Gameover(topFrame);
@@ -270,8 +301,31 @@ public class LostinWonderland extends JPanel implements ActionListener {
                 showGameComplete();
             }
         }
+        if (currentLevel == 2 && !isCountdownActive) {
+            isCountdownActive = true; 
+            startCountdown();
+        }
         
         repaint();
+    }
+
+    private void startCountdown() {
+        countdownThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (remainingTime > 0) {
+                        Thread.sleep(1000);
+                        remainingTime--;
+                        repaint(); 
+                    }
+                    endGame();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        countdownThread.start();
     }
 
     private void loadLevel(int level) {
@@ -327,6 +381,14 @@ public class LostinWonderland extends JPanel implements ActionListener {
                 ghostWords.add(words[4]);
                 ghostClearedList.add(false);
 
+                ghosts.add(new Point(1800, 200));
+                ghostWords.add(words[5]);
+                ghostClearedList.add(false);
+
+                lamp.add(new Point(400, 207));
+                lamp.add(new Point(1000, 207));
+                lamp.add(new Point(1600, 207));
+
                 keyPosition = new Point(1450, 210);
                 doorPosition = new Point(1900, 210);
 
@@ -338,7 +400,11 @@ public class LostinWonderland extends JPanel implements ActionListener {
     
 
     private void showGameComplete() {
+        musicThread.stopMusic();
         timer.stop();
+        if (countdownThread != null && countdownThread.isAlive()) {
+            countdownThread.interrupt();
+        }
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
         frame.getContentPane().removeAll(); 
         Win winPanel = new Win(frame);

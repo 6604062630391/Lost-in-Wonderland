@@ -8,6 +8,7 @@ public class Win extends JPanel {
     private Image backgroundImage;
     private Image restartButtonImage;
     private Image exitButtonImage;
+    private MusicThread musicThread;
 
     public Win(JFrame frame) {
         this.frame = frame;
@@ -17,7 +18,10 @@ public class Win extends JPanel {
         backgroundImage = new ImageIcon("win.jpg").getImage();
 
         restartButtonImage = new ImageIcon("restart01.png").getImage(); 
-        exitButtonImage = new ImageIcon("no01.png").getImage(); 
+        exitButtonImage = new ImageIcon("no01.png").getImage();
+
+        musicThread = new MusicThread();
+        musicThread.playMusic("win.wav",true);
 
         // Create Restart button
         JButton restartButton = new JButton(new ImageIcon(restartButtonImage));
@@ -59,6 +63,7 @@ public class Win extends JPanel {
     }
 
     private void restartGame() {
+        musicThread.stopMusic(); 
         frame.getContentPane().removeAll(); 
         LostinWonderland gamePanel = new LostinWonderland(); 
         frame.add(gamePanel); 
