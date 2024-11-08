@@ -10,7 +10,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
 
     private Timer timer;
 
-    private int remainingTime = 30;
+    private int remainingTime = 35;
     private boolean isCountdownActive = false;
     private Thread countdownThread;
 
@@ -18,7 +18,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
     private int playerY = 210;
     private int velocityY = 0;
     private boolean onGround = true;
-    private int hp = 10;  // HP เริ่มต้นที่ 10
+    private int hp = 10;
     private int currentGhostIndex = -1; 
 
     private MusicThread musicThread;
@@ -46,6 +46,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
     private Image heartImage;
     private Image keyImage;
     private Image doorImage;
+    private Image openDoorImage;
     private Image boxImage;
 
     private ArrayList<Point> coins = new ArrayList<>();
@@ -72,7 +73,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
     private boolean hasKey = false;
     private Point keyPosition;
     private Point doorPosition;
-
+    
     
     public LostinWonderland() {
         setFocusable(true);
@@ -111,9 +112,9 @@ public class LostinWonderland extends JPanel implements ActionListener {
         heartImage = new ImageIcon("heart.png").getImage();
         keyImage = new ImageIcon("key.png").getImage();
         doorImage = new ImageIcon("door.png").getImage();
+        openDoorImage = new ImageIcon("door2.png").getImage();
         lampImage = new ImageIcon("lamp.png").getImage();
         boxImage = new ImageIcon("box.png").getImage();
-
     }
 
     
@@ -174,12 +175,17 @@ public class LostinWonderland extends JPanel implements ActionListener {
             g.drawImage(lampImage, Lamp.x - cameraX, Lamp.y, 50, 70, this);
         }
 
-
+        
         if (currentLevel == 2) {
             if (!hasKey) {
                 g.drawImage(keyImage, keyPosition.x - cameraX, 250, 30, 19, this);
             }
-            g.drawImage(doorImage, doorPosition.x - cameraX, 185, 60, 90, this);
+            else if (hasKey && playerX + PLAYER_WIDTH > doorPosition.x && playerX < doorPosition.x + 60
+                && playerY + PLAYER_HEIGHT > doorPosition.y && playerY < doorPosition.y + 90) {
+                g.drawImage(openDoorImage, doorPosition.x - cameraX, 185, 60, 90, this);
+            } else {
+                g.drawImage(doorImage, doorPosition.x - cameraX, 185, 60, 90, this);
+            }
         }
 
         g.drawImage(heartImage,10,340,30,27,this );
@@ -298,6 +304,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
         if (currentLevel == 2 && hasKey) {
             if (playerX + PLAYER_WIDTH > doorPosition.x && playerX < doorPosition.x + 60
                 && playerY + PLAYER_HEIGHT > doorPosition.y && playerY < doorPosition.y + 90) {
+                
                 showGameComplete();
             }
         }
@@ -327,7 +334,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
         });
         countdownThread.start();
     }
-
+    
     private void loadLevel(int level) {
         playerX = 50;
         playerY = 210;
@@ -337,6 +344,7 @@ public class LostinWonderland extends JPanel implements ActionListener {
         userInput = "";
         coinsCollected = 0;
         levelComplete = false;
+
     
         coins.clear();
         coinCollected.clear();
@@ -346,25 +354,6 @@ public class LostinWonderland extends JPanel implements ActionListener {
         ghostClearedList.clear();
     
         switch (level) {
-            case 1:
-                backgroundImage = new ImageIcon("back.png").getImage();
-                layerImage = new ImageIcon("layer.png").getImage();
-
-                for (int i = 0; i < 10; i++) {
-                    coins.add(new Point(100 + i * 150, 210));
-                    coinCollected.add(false);
-                }
-
-                ghosts.add(new Point(500, 200));
-                ghostWords.add(words[0]);
-                ghostClearedList.add(false);
-
-                ghosts.add(new Point(1100, 200));
-                ghostWords.add(words[1]);
-                ghostClearedList.add(false);
-
-                break;
-    
             case 2:
                 backgroundImage = new ImageIcon("back2.png").getImage();
                 layerImage = new ImageIcon("layer2.png").getImage();
@@ -385,9 +374,9 @@ public class LostinWonderland extends JPanel implements ActionListener {
                 ghostWords.add(words[5]);
                 ghostClearedList.add(false);
 
-                lamp.add(new Point(400, 207));
-                lamp.add(new Point(1000, 207));
-                lamp.add(new Point(1600, 207));
+                lamp.add(new Point(400, 206));
+                lamp.add(new Point(1000, 206));
+                lamp.add(new Point(1600, 206));
 
                 keyPosition = new Point(1450, 210);
                 doorPosition = new Point(1900, 210);
@@ -398,19 +387,27 @@ public class LostinWonderland extends JPanel implements ActionListener {
         repaint();
     }
     
-
     private void showGameComplete() {
         musicThread.stopMusic();
         timer.stop();
         if (countdownThread != null && countdownThread.isAlive()) {
             countdownThread.interrupt();
         }
-        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        frame.getContentPane().removeAll(); 
-        Win winPanel = new Win(frame);
-        frame.add(winPanel); 
-        frame.revalidate(); 
-        frame.repaint();
+        Timer delayTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((Timer)e.getSource()).stop();
+    
+                JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(LostinWonderland.this);
+                frame.getContentPane().removeAll();
+                Win winPanel = new Win(frame);
+                frame.add(winPanel); 
+                frame.revalidate(); 
+                frame.repaint();
+            }
+        });
+        delayTimer.setRepeats(false); 
+        delayTimer.start(); 
     }
 
     private class TAdapter extends KeyAdapter {
